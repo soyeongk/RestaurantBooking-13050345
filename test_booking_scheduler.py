@@ -1,30 +1,34 @@
-import pytest
 from datetime import datetime
+
+import pytest
 
 from schedule import Customer, Schedule
 from communication import SmsSender, MailSender
 from booking_scheduler import BookingScheduler
 
-def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가():
-    not_on_the_hour = datetime.strptime('2021/03/26 09:05', '%Y/%m/%d %H:%M')
-    customer = Customer("Fake name", "010-1234-5678")
-    schedule = Schedule(not_on_the_hour, 3, customer)
-    booking_scheduler = BookingScheduler(3)
+NOT_ON_THE_HOUR = datetime.strptime('2021/03/26 09:05', '%Y/%m/%d %H:%M')
+ON_THE_HOUR = datetime.strptime('2021/03/26 09:00', '%Y/%m/%d %H:%M')
+CUSTOMER = Customer("Fake name", "010-1234-5678")
+
+USER_CAPACITY = 1
+CAPACITY_PER_HOUR = 3
+
+@pytest.fixture
+def booking_scheduler():
+    return BookingScheduler(CAPACITY_PER_HOUR)
+
+def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(booking_scheduler):
+    schedule = Schedule(NOT_ON_THE_HOUR, USER_CAPACITY, CUSTOMER)
 
     with pytest.raises(Exception):
         booking_scheduler.add_schedule(schedule)
 
-
-def test_예약은_정시에만_가능하다_정시인_경우_예약가능():
-    on_the_hour = datetime.strptime('2021/03/26 09:00', '%Y/%m/%d %H:%M')
-    customer = Customer("Fake name", "010-1234-5678")
-    schedule = Schedule(on_the_hour, 1, customer)
-    booking_scheduler = BookingScheduler(3)
+def test_예약은_정시에만_가능하다_정시인_경우_예약가능(booking_scheduler):
+    schedule = Schedule(ON_THE_HOUR, USER_CAPACITY, CUSTOMER)
 
     booking_scheduler.add_schedule(schedule)
 
     assert booking_scheduler.has_schedule(schedule)
-
 
 def test_시간대별_인원제한이_있다_같은_시간대에_Capacity_초과할_경우_예외발생():
     pass
