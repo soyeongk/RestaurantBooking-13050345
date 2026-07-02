@@ -15,6 +15,20 @@ CUSTOMER_WITH_MAIL = Customer("Fake name", "010-1234-5678", "test@test.com")
 UNDER_CAPACITY = 1
 CAPACITY_PER_HOUR = 3
 
+class SundayBookingScheduler(BookingScheduler):
+    def __init__(self, capacity_per_hour):
+        super().__init__(capacity_per_hour)
+
+    def get_now(self):
+        return datetime.strptime('2021/03/28 17:00', '%Y/%m/%d %H:%M')
+
+class MondayBookingScheduler(BookingScheduler):
+    def __init__(self, capacity_per_hour):
+        super().__init__(capacity_per_hour)
+
+    def get_now(self):
+        return datetime.strptime('2024/06/03 17:00', '%Y/%m/%d %H:%M')
+
 @pytest.fixture
 def booking_scheduler():
     return BookingScheduler(CAPACITY_PER_HOUR)
@@ -91,7 +105,16 @@ def test_이메일이_있는_경우에는_이메일_발송(booking_scheduler_wit
     assert mail_mock.send_mail_count == 1
 
 def test_현재날짜가_일요일인_경우_예약불가_예외처리():
-    pass
+    booking_scheduler = SundayBookingScheduler(CAPACITY_PER_HOUR)
+    schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+
+    with pytest.raises(ValueError):
+        booking_scheduler.add_schedule(schedule)
 
 def test_현재날짜가_일요일이_아닌경우_예약가능():
-    pass
+    booking_scheduler = MondayBookingScheduler(CAPACITY_PER_HOUR)
+    schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+
+    booking_scheduler.add_schedule(schedule)
+
+    assert booking_scheduler.has_schedule(schedule)
